@@ -1,0 +1,27 @@
+name: Verify
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: webhook
+          POSTGRES_USER: webhook
+          POSTGRES_PASSWORD: webhook-local-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U webhook -d webhook"
+          --health-interval 2s --health-timeout 3s --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn --batch-mode --no-transfer-progress verify
